@@ -205,6 +205,25 @@ namespace Inside.InAllocator
             {
                 Memory = new InsideMemory<F>(Allocation, Exp);
             }
+
+            public interface IIterateJob
+            {
+                public void Execute(ref T Item);
+            }
+
+            public void UnsafeIterateJob<TJob>(ref TJob Job, int StartIndex, int Count) where TJob: struct, IIterateJob
+            {
+                ref var Current = ref this[StartIndex];
+
+                ref var LastOffsetByOne = ref this[Count];
+
+                while (!Unsafe.AreSame(ref Current, ref LastOffsetByOne))
+                {
+                    Job.Execute(ref Current);
+
+                    Current = ref Unsafe.Add(ref Current, 1);
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
