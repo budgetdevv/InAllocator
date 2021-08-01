@@ -59,7 +59,7 @@ namespace Inside.InAllocator
             
                 AdditionalMemoryBlocks = new List<MemoryBlock>(5);
 
-                for (int Exp = 1; Exp < memoryBlocks.Length; Exp++)
+                for (int Exp = 0; Exp < memoryBlocks.Length; Exp++)
                 {
                     memoryBlocks[Exp] = new Slab(AllocationSize);
                 }
@@ -221,8 +221,6 @@ namespace Inside.InAllocator
         public void AllocateByExp<T>(int Exp, int Size, out InsideMemory<T> Memory)
             //where T: class
         {
-            //Console.WriteLine(Exp);
-            
             ref var Slab = ref Slabs[Exp];
             
             Slab.Allocate(Exp, Size, this, out Memory);
@@ -230,7 +228,6 @@ namespace Inside.InAllocator
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Recycle<T>(in InsideMemory<T> Memory)
-            //where T: class
         {
             Memory.Clear();
             
@@ -239,7 +236,6 @@ namespace Inside.InAllocator
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnsafeRecycle<T>(in InsideMemory<T> Memory)
-            //where T: class
         {
             ref var Slab = ref Slabs[Memory.Exp];
             
