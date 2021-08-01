@@ -7,49 +7,68 @@ namespace MyApp // Note: actual namespace depends on the project name.
     {
         public static void Main(string[] args)
         {
+            var Before = Test1();
+
+            var After = GC.GetTotalMemory(true);
+            
+            Console.WriteLine($"After De-allocation | {After}");
+
+            Console.WriteLine($"Memory Freed - {Before - After}");
+        }
+
+        private static long Test1()
+        {
             var Allocator = new InAllocator();
             
-            Allocator.Allocate<string>(10_000, out var Memory);
+            Allocator.Allocate<string>(1, out var Memory);
+
+            ref var String = ref Memory[0];
+                
+            String = "Trump";
+
+            Console.WriteLine(Memory[0]);
             
-            for (int I = 0; I < Memory.Size; I++)
-            {
-                Memory[I] = "Trump";
-            }
+            String = "McDonaldz";
+
+            Console.WriteLine(Memory[0]);
             
-            Memory[Memory.Size - 1] = "McDonaldz";
+            Memory.UnsafeAs<int>(out var NMem);
+
+            ref var Num = ref NMem[0];
+
+            Num = 69;
             
-            Console.WriteLine(Memory.Size);
+            Console.WriteLine(NMem[0]);
+
+            Num = 1258;
             
-            for (int I = 0; I < Memory.Size; I++)
-            {
-                Console.WriteLine(Memory[I]);
-            }
+            Console.WriteLine(NMem[0]);
             
-            Memory.UnsafeAs<int>(out var MemN);
+            Allocator.UnsafeRecycle(in Memory);
+
+            Memory = default;
+
+            NMem = default;
             
-            //Memory.As<int>(out var MemN);
+            Allocator.Allocate<int>(1, out NMem);
             
-            MemN[0] = 1;
+            Console.WriteLine(NMem[0]);
             
-            MemN[1] = 2;
+            NMem = default;
+
+            var Before = GC.GetTotalMemory(false);
             
-            MemN[2] = 3;
+            Console.WriteLine($"Before De-allocation | {Before}");
             
-            for (int I = 0; I <= 2; I++)
-            {
-                Console.WriteLine(MemN[I]);
-            }
+            //Control
             
-            Allocator.UnsafeRecycle<int>(in MemN);
+            Console.WriteLine($"Control | {GC.GetTotalMemory(false)}");
             
-            MemN = default;
-            
-            Allocator.Allocate<int>(10_000, out MemN);
-            
-            for (int I = 0; I <= 2; I++)
-            {
-                Console.WriteLine(MemN[I]);
-            }
+            //Force it to collect the Allocator ( And its underlying memory )
+
+            Allocator = null;
+
+            return Before;
         }
     }
 }

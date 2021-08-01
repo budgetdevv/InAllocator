@@ -49,9 +49,9 @@ namespace Inside.InAllocator
         
         private readonly List<MemoryBlock> AdditionalMemoryBlocks;
 
-        public InAllocator(int AllocationSize = 85_000)
+        public InAllocator(int AllocationSizeInBytes = 85_000)
         {
-            if (AllocationSize >= 85_000)
+            if (AllocationSizeInBytes >= 85_000)
             {
                 Slabs = new Slab[31];
 
@@ -61,7 +61,7 @@ namespace Inside.InAllocator
 
                 for (int Exp = 0; Exp < memoryBlocks.Length; Exp++)
                 {
-                    memoryBlocks[Exp] = new Slab(AllocationSize);
+                    memoryBlocks[Exp] = new Slab(AllocationSizeInBytes);
                 }
             }
 
