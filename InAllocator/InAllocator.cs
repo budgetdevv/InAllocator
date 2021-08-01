@@ -230,7 +230,7 @@ namespace Inside.InAllocator
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Recycle<T>(in InsideMemory<T> Memory)
-            where T: class
+            //where T: class
         {
             Memory.Clear();
             
