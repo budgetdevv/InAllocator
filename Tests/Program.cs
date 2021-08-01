@@ -28,6 +28,8 @@ namespace MyApp // Note: actual namespace depends on the project name.
             
             Memory.UnsafeAs<int>(out var MemN);
 
+            //Memory.As<int>(out var MemN);
+            
             MemN[0] = 1;
             
             MemN[1] = 2;

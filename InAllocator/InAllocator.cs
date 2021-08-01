@@ -49,9 +49,9 @@ namespace Inside.InAllocator
         
         private readonly List<MemoryBlock> AdditionalMemoryBlocks;
 
-        public InAllocator(int AllocationSize = 131_072)
+        public InAllocator(int AllocationSize = 85_000)
         {
-            if (AllocationSize >= 131_072)
+            if (AllocationSize >= 85_000)
             {
                 Slabs = new Slab[31];
 
@@ -62,17 +62,12 @@ namespace Inside.InAllocator
                 for (int Exp = 1; Exp < memoryBlocks.Length; Exp++)
                 {
                     memoryBlocks[Exp] = new Slab(AllocationSize);
-
-                    if (memoryBlocks[Exp].FreeMemory == null)
-                    {
-                        Console.WriteLine("Kys");
-                    }
                 }
             }
 
             else
             {
-                throw new Exception("AllocationSize must at least be 131_072!");
+                throw new Exception("AllocationSize must at least be 85_000!");
             }
         }
         
@@ -82,7 +77,9 @@ namespace Inside.InAllocator
 
             public readonly void* MemoryPtr;
 
-            public int MemoryBlockSize, AllocationIndex, NextBlockIndex;
+            public readonly int MemoryBlockSize;
+            
+            public int AllocationIndex, NextBlockIndex;
 
             public MemoryBlock(int allocationSize)
             {
@@ -92,10 +89,6 @@ namespace Inside.InAllocator
 
                 MemoryPtr = Unsafe.AsPointer(ref Memory[0]);
 
-                // Unsafe.AsRef<string>((void*) MemoryPtr) = "Fuck";
-                //
-                // Console.WriteLine("Lol");
-                
                 AllocationIndex = 0;
 
                 NextBlockIndex = -1;
@@ -146,26 +139,14 @@ namespace Inside.InAllocator
             public void UnsafeAllocate<T>(int Exp, int allocationSize, out InsideMemory<T> Memory)
                 //where T : class
             {
-                Console.WriteLine(this.Memory.Length);
-
-                //Memory = new InsideMemory<T>(Unsafe.AsPointer(ref this.Memory[AllocationIndex]), Exp);
-
                 Memory = new InsideMemory<T>(MemoryPtr, Exp);
 
                 AllocationIndex += allocationSize;
-
-                Console.WriteLine(AllocationIndex);
             }
         }
         
         public readonly unsafe struct InsideMemory<T> //where T: class
         {
-            #if RELEASE
-
-            //internal readonly object[] What;
-            
-            #endif
-            
             internal readonly void* Allocation;
 
             internal readonly int Exp;
@@ -180,73 +161,27 @@ namespace Inside.InAllocator
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => ref Unsafe.Add(ref Unsafe.AsRef<T>(Allocation), Index);
-                //get => ref Unsafe.AsRef<T>((void*) ((nuint) Allocation + (Index * PtrSize)));
-
-                //get => ref Unsafe.As<nint, T>(ref Allocation[Index]);
-
-                // get
-                // {
-                //     ref var First = ref Unsafe.AsRef<T>(Allocation);
-                //
-                //     ref var FirstO = ref Unsafe.AsRef<object>(Allocation);
-                //
-                //     if (!Unsafe.AreSame(ref FirstO, ref What[0]))
-                //     {
-                //         Console.WriteLine((nuint) Allocation);
-                //         
-                //         Console.WriteLine((nuint) Unsafe.AsPointer(ref What[0]));
-                //
-                //         
-                //         Console.WriteLine("Kys");
-                //     }
-                //     
-                //     return ref Unsafe.Add(ref First, Index);
-                // }
             }
 
-            // public InsideMemory(nint* allocation, int exp, object[] what)
-            // {
-            //     Allocation = allocation;
-            //
-            //     Exp = exp;
-            //
-            //     What = what;
-            // }
-            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InsideMemory(void* allocation, int exp)
             {
                 Allocation = allocation;
 
                 Exp = exp;
-                
-                //What = null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public InsideMemory(nuint Address, int exp)
             {
-                Allocation = (nint*) Address;
+                Allocation = (void*) Address;
 
                 Exp = exp;
-
-                //What = null;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Clear()
             {
-                // ref var Current = ref this[0];
-                //
-                // ref var LastOffsetByOne = ref this[Size];
-                //
-                // while (!Unsafe.AreSame(ref Current, ref LastOffsetByOne))
-                // {
-                //     Current = null;
-                //
-                //     Current = ref Unsafe.Add(ref Current, 1);
-                // }
-                
                 ref var Current = ref Unsafe.As<T, object>(ref this[0]);
 
                 ref var LastOffsetByOne = ref Unsafe.As<T, object>(ref this[Size]);
@@ -261,7 +196,7 @@ namespace Inside.InAllocator
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void As<F>(out InsideMemory<F> Memory)
-                where F: class
+                //where F: class
             {
                 Clear();
                 

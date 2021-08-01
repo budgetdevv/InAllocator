@@ -16,4 +16,3 @@ C:\Users\Administrator\Desktop\Code\InAllocator\Tests\obj\Release\net5.0\Tests.g
 C:\Users\Administrator\Desktop\Code\InAllocator\Tests\obj\Release\net5.0\ref\Tests.dll
 C:\Users\Administrator\Desktop\Code\InAllocator\Tests\bin\Release\net5.0\InAllocator.dll
 C:\Users\Administrator\Desktop\Code\InAllocator\Tests\bin\Release\net5.0\InAllocator.pdb
-C:\Users\Administrator\Desktop\Code\InAllocator\Tests\obj\Release\net5.0\Tests.csproj.CopyComplete
