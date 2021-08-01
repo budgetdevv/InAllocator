@@ -22,7 +22,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
             var Allocator = new InAllocator();
             
             Allocator.Allocate<string>(1, out var Memory);
-
+            
             ref var String = ref Memory[0];
                 
             String = "Trump";
@@ -33,7 +33,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
 
             Console.WriteLine(Memory[0]);
             
-            Memory.UnsafeAs<int>(out var NMem);
+            Memory.UnsafeAs<ulong>(out var NMem);
 
             ref var Num = ref NMem[0];
 
@@ -51,7 +51,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
 
             NMem = default;
             
-            Allocator.Allocate<int>(1, out NMem);
+            Allocator.Allocate<ulong>(1, out NMem);
             
             Console.WriteLine(NMem[0]);
             

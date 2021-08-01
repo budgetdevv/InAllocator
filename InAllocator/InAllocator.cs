@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Inside.InAllocator.Collections;
 
 // ReSharper disable once CheckNamespace
@@ -25,7 +23,7 @@ namespace Inside.InAllocator
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Allocate<T>(int Exp, int AllocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
-                //where T: class
+                
             {
                 if (FreeMemory.TryDequeue(out var FreeAddress))
                 {
@@ -39,8 +37,14 @@ namespace Inside.InAllocator
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void AllocateNew<T>(int Exp, int AllocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
+            {
+                Block.Allocate(Exp, AllocationSize, Allocator, out Memory);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public unsafe void Recycle<T>(in InsideMemory<T> Memory)
-                //where T: class
+                
             {
                 FreeMemory.Enqueue((nuint) Memory.Allocation);
             }
@@ -48,8 +52,6 @@ namespace Inside.InAllocator
         
         private readonly Slab[] Slabs;
         
-        //private readonly List<MemoryBlock> AdditionalMemoryBlocks;
-
         private InQueue<MemoryBlock> AdditionalMemoryBlocks;
         
         public InAllocator(int AllocationSizeInBytes = 85_000)
@@ -59,9 +61,7 @@ namespace Inside.InAllocator
                 Slabs = new Slab[31];
 
                 var memoryBlocks = Slabs; //Local var to skip bound checks
-            
-                //AdditionalMemoryBlocks = new List<MemoryBlock>(5);
-
+                
                 AdditionalMemoryBlocks = new InQueue<MemoryBlock>(5);
                 
                 for (int Exp = 0; Exp < memoryBlocks.Length; Exp++)
@@ -101,7 +101,6 @@ namespace Inside.InAllocator
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void Allocate<T>(int Exp, int allocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
-                //where T : class
             {
                 if (unchecked(AllocationIndex + allocationSize) < MemoryBlockSize)
                 {
@@ -115,14 +114,9 @@ namespace Inside.InAllocator
             }
 
             private void AllocateSlow<T>(int Exp, int allocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
-                //where T : class
             {
                 if (NextBlockIndex != -1)
                 {
-                    //TODO: Write custom List<T> that can return ref ( Completed )
-                    
-                    //ref var Next = ref Unsafe.Add(ref MemoryMarshal.GetReference(CollectionsMarshal.AsSpan(Allocator.AdditionalMemoryBlocks)), NextBlockIndex);
-
                     ref var Next = ref Allocator.AdditionalMemoryBlocks[NextBlockIndex];
                     
                     Next.Allocate(Exp, allocationSize, Allocator, out Memory);
@@ -130,8 +124,6 @@ namespace Inside.InAllocator
 
                 else
                 {
-                    //var Blocks = Allocator.AdditionalMemoryBlocks;
-                    
                     ref var Blocks = ref Allocator.AdditionalMemoryBlocks;
 
                     NextBlockIndex = Blocks.Count;
@@ -139,8 +131,6 @@ namespace Inside.InAllocator
                     var NewBlock = new MemoryBlock(MemoryBlockSize);
                     
                     NewBlock.UnsafeAllocate(Exp, allocationSize, out Memory);
-
-                    //Blocks.Enqueue(NewBlock);
                     
                     Blocks.Enqueue(ref NewBlock);
                 }
@@ -148,7 +138,6 @@ namespace Inside.InAllocator
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void UnsafeAllocate<T>(int Exp, int allocationSize, out InsideMemory<T> Memory)
-                //where T : class
             {
                 Memory = new InsideMemory<T>(MemoryPtr, Exp);
 
@@ -156,7 +145,7 @@ namespace Inside.InAllocator
             }
         }
         
-        public readonly unsafe struct InsideMemory<T> //where T: class
+        public readonly unsafe struct InsideMemory<T>
         {
             internal readonly void* Allocation;
 
@@ -183,11 +172,9 @@ namespace Inside.InAllocator
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InsideMemory(nuint Address, int exp)
+            public InsideMemory(nuint Address, int exp): this ((void*) Address, exp)
             {
-                Allocation = (void*) Address;
-
-                Exp = exp;
+                //Nothing here!
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -207,7 +194,6 @@ namespace Inside.InAllocator
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void As<F>(out InsideMemory<F> Memory)
-                //where F: class
             {
                 Clear();
                 
@@ -223,20 +209,19 @@ namespace Inside.InAllocator
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Allocate<T>(int Size, out InsideMemory<T> Memory)
-            //where T : class
         {
             AllocateByExp(GetExpByAllocationSize(Size), Size, out Memory);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AllocateByExp<T>(int Exp, int Size, out InsideMemory<T> Memory)
-            //where T: class
+            
         {
             ref var Slab = ref Slabs[Exp];
             
             Slab.Allocate(Exp, Size, this, out Memory);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Recycle<T>(in InsideMemory<T> Memory)
         {
