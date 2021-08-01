@@ -1,0 +1,5 @@
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Debug\net5.0\InAllocator.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Debug\net5.0\InAllocator.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Debug\net5.0\InAllocator.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Debug\net5.0\InAllocator.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Debug\net5.0\InAllocator.csproj.CoreCompileInputs.cache

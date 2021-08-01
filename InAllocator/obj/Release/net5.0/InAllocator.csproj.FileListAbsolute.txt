@@ -1,0 +1,12 @@
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\bin\Release\net5.0\InAllocator.deps.json
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\bin\Release\net5.0\InAllocator.dll
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\bin\Release\net5.0\InAllocator.pdb
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.dll
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\refint\InAllocator.dll
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\InAllocator.pdb
+C:\Users\Administrator\Desktop\Code\InAllocator\InAllocator\obj\Release\net5.0\ref\InAllocator.dll

@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InAllocator", "InAllocator\InAllocator.csproj", "{7156E8C6-7A87-4D8C-A05D-7970BC44BAD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{4D65EF34-E105-408B-93D5-45CEF92BDB51}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7156E8C6-7A87-4D8C-A05D-7970BC44BAD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7156E8C6-7A87-4D8C-A05D-7970BC44BAD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7156E8C6-7A87-4D8C-A05D-7970BC44BAD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7156E8C6-7A87-4D8C-A05D-7970BC44BAD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D65EF34-E105-408B-93D5-45CEF92BDB51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D65EF34-E105-408B-93D5-45CEF92BDB51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D65EF34-E105-408B-93D5-45CEF92BDB51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D65EF34-E105-408B-93D5-45CEF92BDB51}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
