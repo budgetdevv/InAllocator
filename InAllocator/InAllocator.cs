@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Inside.InAllocator.Collections;
 
 // ReSharper disable once CheckNamespace
 namespace Inside.InAllocator
@@ -11,13 +12,13 @@ namespace Inside.InAllocator
     {
         private struct Slab
         {
-            internal readonly Queue<nuint> FreeMemory;
+            private InQueue<nuint> FreeMemory;
 
             private MemoryBlock Block;
 
             public Slab(int AllocationSize)
             {
-                FreeMemory = new Queue<nuint>(25);
+                FreeMemory = new InQueue<nuint>(25);
 
                 Block = new MemoryBlock(AllocationSize);
             }
@@ -47,8 +48,10 @@ namespace Inside.InAllocator
         
         private readonly Slab[] Slabs;
         
-        private readonly List<MemoryBlock> AdditionalMemoryBlocks;
+        //private readonly List<MemoryBlock> AdditionalMemoryBlocks;
 
+        private InQueue<MemoryBlock> AdditionalMemoryBlocks;
+        
         public InAllocator(int AllocationSizeInBytes = 85_000)
         {
             if (AllocationSizeInBytes >= 85_000)
@@ -57,8 +60,10 @@ namespace Inside.InAllocator
 
                 var memoryBlocks = Slabs; //Local var to skip bound checks
             
-                AdditionalMemoryBlocks = new List<MemoryBlock>(5);
+                //AdditionalMemoryBlocks = new List<MemoryBlock>(5);
 
+                AdditionalMemoryBlocks = new InQueue<MemoryBlock>(5);
+                
                 for (int Exp = 0; Exp < memoryBlocks.Length; Exp++)
                 {
                     memoryBlocks[Exp] = new Slab(AllocationSizeInBytes);
@@ -73,7 +78,7 @@ namespace Inside.InAllocator
         
         private unsafe struct MemoryBlock
         {
-            public readonly object[] Memory;
+            public readonly object[] AllocatedMemory;
 
             public readonly void* MemoryPtr;
 
@@ -85,9 +90,9 @@ namespace Inside.InAllocator
             {
                 MemoryBlockSize = allocationSize;
                 
-                Memory = new object[MemoryBlockSize];
+                AllocatedMemory = new object[MemoryBlockSize];
 
-                MemoryPtr = Unsafe.AsPointer(ref Memory[0]);
+                MemoryPtr = Unsafe.AsPointer(ref AllocatedMemory[0]);
 
                 AllocationIndex = 0;
 
@@ -114,24 +119,30 @@ namespace Inside.InAllocator
             {
                 if (NextBlockIndex != -1)
                 {
-                    //TODO: Write custom List<T> that can return ref
+                    //TODO: Write custom List<T> that can return ref ( Completed )
                     
-                    ref var Next = ref Unsafe.Add(ref MemoryMarshal.GetReference(CollectionsMarshal.AsSpan(Allocator.AdditionalMemoryBlocks)), NextBlockIndex);
+                    //ref var Next = ref Unsafe.Add(ref MemoryMarshal.GetReference(CollectionsMarshal.AsSpan(Allocator.AdditionalMemoryBlocks)), NextBlockIndex);
 
+                    ref var Next = ref Allocator.AdditionalMemoryBlocks[NextBlockIndex];
+                    
                     Next.Allocate(Exp, allocationSize, Allocator, out Memory);
                 }
 
                 else
                 {
-                    var Blocks = Allocator.AdditionalMemoryBlocks;
+                    //var Blocks = Allocator.AdditionalMemoryBlocks;
                     
+                    ref var Blocks = ref Allocator.AdditionalMemoryBlocks;
+
                     NextBlockIndex = Blocks.Count;
 
                     var NewBlock = new MemoryBlock(MemoryBlockSize);
                     
                     NewBlock.UnsafeAllocate(Exp, allocationSize, out Memory);
 
-                    Blocks.Add(NewBlock);
+                    //Blocks.Enqueue(NewBlock);
+                    
+                    Blocks.Enqueue(ref NewBlock);
                 }
             }
             
