@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Inside.InAllocator;
 
 
@@ -8,13 +9,15 @@ namespace MyApp // Note: actual namespace depends on the project name.
     {
         public static void Main(string[] args)
         {
-            var Before = Test1();
-
-            var After = GC.GetTotalMemory(true);
+            Test2();
             
-            Console.WriteLine($"After De-allocation | {After}");
-
-            Console.WriteLine($"Memory Freed - {Before - After}");
+            // var Before = Test1();
+            //
+            // var After = GC.GetTotalMemory(true);
+            //
+            // Console.WriteLine($"After De-allocation | {After}");
+            //
+            // Console.WriteLine($"Memory Freed - {Before - After}");
         }
 
         private static long Test1()
@@ -70,6 +73,42 @@ namespace MyApp // Note: actual namespace depends on the project name.
             Allocator = null;
 
             return Before;
+        }
+
+        private class Foo
+        {
+            private int Num;
+
+            public Foo(int num)
+            {
+                Num = num;
+            }
+
+            public override string ToString()
+            {
+                return Num.ToString();
+            }
+        }
+        
+        private static void Test2()
+        {
+            var OArr = new object[10];
+
+            var SArr = Unsafe.As<string[]>(OArr);
+
+            SArr[0] = "Yes";
+
+            Console.WriteLine(SArr[0]);
+
+            var FArr = Unsafe.As<Foo[]>(OArr);
+
+            FArr[0] = new Foo(69);
+            
+            Console.WriteLine(OArr[0]);
+            
+            //This can break, since its no longer a string
+            
+            Console.WriteLine(SArr[0]);
         }
     }
 }

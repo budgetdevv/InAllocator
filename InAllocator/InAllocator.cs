@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Inside.InAllocator.Collections;
 
 // ReSharper disable once CheckNamespace
@@ -93,7 +94,7 @@ namespace Inside.InAllocator
                 AllocatedMemory = new object[MemoryBlockSize];
 
                 MemoryPtr = Unsafe.AsPointer(ref AllocatedMemory[0]);
-
+                
                 AllocationIndex = 0;
 
                 NextBlockIndex = -1;
@@ -234,11 +235,17 @@ namespace Inside.InAllocator
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AllocateByExp<T>(int Exp, int Size, out InsideMemory<T> Memory)
-            
+
         {
-            ref var Slab = ref Slabs[Exp];
+            ref var Slab = ref GetSlabByExp(Exp);
             
             Slab.Allocate(Exp, Size, this, out Memory);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ref Slab GetSlabByExp(int Exp)
+        {
+            return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(Slabs), Exp);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -252,7 +259,7 @@ namespace Inside.InAllocator
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnsafeRecycle<T>(in InsideMemory<T> Memory)
         {
-            ref var Slab = ref Slabs[Memory.Exp];
+            ref var Slab = ref GetSlabByExp(Memory.Exp);
             
             Slab.Recycle(in Memory);
         }

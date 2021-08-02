@@ -64,14 +64,14 @@ namespace MyApp // Note: actual namespace depends on the project name.
             IA.UnsafeRecycle(in Mem);
         }
         
-        [Benchmark]
+        //[Benchmark]
         public void IntArr_Write()
         {
             IntArr[69] = 69;
 
         }
         
-        [Benchmark]
+        //[Benchmark]
         public void IntMem_Write()
         {
             IntMem[69] = 69;
