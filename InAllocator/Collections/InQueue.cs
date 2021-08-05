@@ -40,7 +40,7 @@ namespace Inside.InAllocator.Collections
 
             #else
             
-            return new T[InitialSize];
+            return new T[Size];
             
             #endif
         }
@@ -56,13 +56,17 @@ namespace Inside.InAllocator.Collections
         {
             Enqueue(ref Item);
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Enqueue(ref T Item)
+        public void Enqueue(ref T Item) //Improvement: https://shorturl.at/jwI35
         {
-            if (unchecked(++ReadPos) != Arr.Length)
+            var arr = Arr;
+            
+            var WritePos = unchecked(++ReadPos);
+        
+            if ((uint) WritePos < (uint) arr.Length)
             {
-                this[ReadPos] = Item;
+                arr[WritePos] = Item;
             }
 
             else

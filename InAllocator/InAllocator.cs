@@ -93,6 +93,10 @@ namespace Inside.InAllocator
                 
                 AllocatedMemory = new object[MemoryBlockSize];
 
+                //You can't pin managed arrays with GCHandle :((
+                
+                //var Handle = GCHandle.Alloc(AllocatedMemory, GCHandleType.Pinned);
+
                 MemoryPtr = Unsafe.AsPointer(ref AllocatedMemory[0]);
                 
                 AllocationIndex = 0;
