@@ -97,7 +97,7 @@ namespace Inside.InAllocator
                 
                 //var Handle = GCHandle.Alloc(AllocatedMemory, GCHandleType.Pinned);
 
-                MemoryPtr = Unsafe.AsPointer(ref AllocatedMemory[0]);
+                MemoryPtr = Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(AllocatedMemory));
                 
                 AllocationIndex = 0;
 
