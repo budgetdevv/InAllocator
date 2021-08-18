@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // ReSharper disable once CheckNamespace
-namespace Inside.InAllocator.Collections
+namespace Inside.InCollections
 {
     public struct InQueue<T>
     {
@@ -34,7 +34,7 @@ namespace Inside.InAllocator.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static T[] AllocateNew(int Size)
         {
-            #if NET5_0
+            #if NET5_0_OR_GREATER
 
             return GC.AllocateUninitializedArray<T>(Size);
 

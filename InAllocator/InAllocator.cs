@@ -2,11 +2,128 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Inside.InAllocator.Collections;
+using Inside.InCollections;
 
 // ReSharper disable once CheckNamespace
-namespace Inside.InAllocator
+namespace Inside.Allocators
 {
+    public readonly unsafe struct InMemory<T>
+    {
+        public readonly void* Allocation;
+
+        internal readonly int Exp;
+
+        public int Size
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => 1 << Exp;
+        }
+
+        public ref T this[int Index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref Unsafe.Add(ref Unsafe.AsRef<T>(Allocation), Index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public InMemory(void* allocation, int exp)
+        {
+            Allocation = allocation;
+
+            Exp = exp;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public InMemory(nuint Address, int exp) : this((void*)Address, exp)
+        {
+            //Nothing here!
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            ref var Current = ref Unsafe.As<T, object>(ref this[0]);
+
+            ref var LastOffsetByOne = ref Unsafe.As<T, object>(ref this[Size]);
+
+            while (!Unsafe.AreSame(ref Current, ref LastOffsetByOne))
+            {
+                Current = null;
+
+                Current = ref Unsafe.Add(ref Current, 1);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void As<F>(out InMemory<F> Memory)
+        {
+            Clear();
+
+            UnsafeAs(out Memory);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void UnsafeAs<F>(out InMemory<F> Memory)
+        {
+            Memory = new InMemory<F>(Allocation, Exp);
+        }
+
+        public interface IIterateJob
+        {
+            public void Execute(ref T Item);
+        }
+
+        public void UnsafeIterateJob<TJob>(ref TJob Job, int StartIndex, int Count) where TJob : struct, IIterateJob
+        {
+            ref var Current = ref this[StartIndex];
+
+            ref var LastOffsetByOne = ref this[Count];
+
+            while (!Unsafe.AreSame(ref Current, ref LastOffsetByOne))
+            {
+                Job.Execute(ref Current);
+
+                Current = ref Unsafe.Add(ref Current, 1);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<T> AsSpan()
+        {
+            return AsSpan(Size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<T> AsSpan(int Count)
+        {
+            return AsSpan(0, Count);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<T> AsSpan(int StartIndex, int Count)
+        {
+            return MemoryMarshal.CreateSpan(ref this[StartIndex], Count);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<T> AsReadOnlySpan()
+        {
+            return AsReadOnlySpan(Size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<T> AsReadOnlySpan(int Count)
+        {
+            return AsReadOnlySpan(0, Count);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<T> AsReadOnlySpan(int StartIndex, int Count)
+        {
+            return MemoryMarshal.CreateReadOnlySpan(ref this[StartIndex], Count);
+        }
+    }
+    
     public sealed class InAllocator: IDisposable
     {
         private struct Slab
@@ -23,12 +140,12 @@ namespace Inside.InAllocator
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Allocate<T>(int Exp, int AllocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
+            public void Allocate<T>(int Exp, int AllocationSize, InAllocator Allocator, out InMemory<T> Memory)
                 
             {
                 if (FreeMemory.TryDequeue(out var FreeAddress))
                 {
-                    Memory = new InsideMemory<T>(FreeAddress, Exp);
+                    Memory = new InMemory<T>(FreeAddress, Exp);
                 }
 
                 else
@@ -38,13 +155,13 @@ namespace Inside.InAllocator
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AllocateNew<T>(int Exp, int AllocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
+            public void AllocateNew<T>(int Exp, int AllocationSize, InAllocator Allocator, out InMemory<T> Memory)
             {
                 Block.Allocate(Exp, AllocationSize, Allocator, out Memory);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public unsafe void Recycle<T>(in InsideMemory<T> Memory)
+            public unsafe void Recycle<T>(in InMemory<T> Memory)
                 
             {
                 FreeMemory.Enqueue((nuint) Memory.Allocation);
@@ -86,16 +203,12 @@ namespace Inside.InAllocator
             public readonly int MemoryBlockSize;
             
             public int AllocationIndex, NextBlockIndex;
-
+            
             public MemoryBlock(int allocationSize)
             {
                 MemoryBlockSize = allocationSize;
                 
                 AllocatedMemory = new object[MemoryBlockSize];
-
-                //You can't pin managed arrays with GCHandle :((
-                
-                //var Handle = GCHandle.Alloc(AllocatedMemory, GCHandleType.Pinned);
 
                 MemoryPtr = Unsafe.AsPointer(ref MemoryMarshal.GetArrayDataReference(AllocatedMemory));
                 
@@ -105,7 +218,7 @@ namespace Inside.InAllocator
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public void Allocate<T>(int Exp, int allocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
+            public void Allocate<T>(int Exp, int allocationSize, InAllocator Allocator, out InMemory<T> Memory)
             {
                 if (unchecked(AllocationIndex + allocationSize) < MemoryBlockSize)
                 {
@@ -118,7 +231,7 @@ namespace Inside.InAllocator
                 }
             }
 
-            private void AllocateSlow<T>(int Exp, int allocationSize, InAllocator Allocator, out InsideMemory<T> Memory)
+            private void AllocateSlow<T>(int Exp, int allocationSize, InAllocator Allocator, out InMemory<T> Memory)
             {
                 if (NextBlockIndex != -1)
                 {
@@ -142,104 +255,22 @@ namespace Inside.InAllocator
             }
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void UnsafeAllocate<T>(int Exp, int allocationSize, out InsideMemory<T> Memory)
+            public void UnsafeAllocate<T>(int Exp, int allocationSize, out InMemory<T> Memory)
             {
-                Memory = new InsideMemory<T>(MemoryPtr, Exp);
+                Memory = new InMemory<T>(MemoryPtr, Exp);
 
                 AllocationIndex += allocationSize;
             }
         }
-        
-        public readonly unsafe struct InsideMemory<T>
-        {
-            internal readonly void* Allocation;
-
-            internal readonly int Exp;
-            
-            public int Size
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => 1 << Exp;
-            }
-
-            public ref T this[int Index]
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => ref Unsafe.Add(ref Unsafe.AsRef<T>(Allocation), Index);
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InsideMemory(void* allocation, int exp)
-            {
-                Allocation = allocation;
-
-                Exp = exp;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public InsideMemory(nuint Address, int exp): this ((void*) Address, exp)
-            {
-                //Nothing here!
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Clear()
-            {
-                ref var Current = ref Unsafe.As<T, object>(ref this[0]);
-
-                ref var LastOffsetByOne = ref Unsafe.As<T, object>(ref this[Size]);
-
-                while (!Unsafe.AreSame(ref Current, ref LastOffsetByOne))
-                {
-                    Current = null;
-
-                    Current = ref Unsafe.Add(ref Current, 1);
-                }
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void As<F>(out InsideMemory<F> Memory)
-            {
-                Clear();
-                
-                UnsafeAs(out Memory);
-            }
-            
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void UnsafeAs<F>(out InsideMemory<F> Memory)
-            {
-                Memory = new InsideMemory<F>(Allocation, Exp);
-            }
-
-            public interface IIterateJob
-            {
-                public void Execute(ref T Item);
-            }
-
-            public void UnsafeIterateJob<TJob>(ref TJob Job, int StartIndex, int Count) where TJob: struct, IIterateJob
-            {
-                ref var Current = ref this[StartIndex];
-
-                ref var LastOffsetByOne = ref this[Count];
-
-                while (!Unsafe.AreSame(ref Current, ref LastOffsetByOne))
-                {
-                    Job.Execute(ref Current);
-
-                    Current = ref Unsafe.Add(ref Current, 1);
-                }
-            }
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Allocate<T>(int Size, out InsideMemory<T> Memory)
+        public void Allocate<T>(int Size, out InMemory<T> Memory)
         {
             AllocateByExp(GetExpByAllocationSize(Size), Size, out Memory);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AllocateByExp<T>(int Exp, int Size, out InsideMemory<T> Memory)
-
+        public void AllocateByExp<T>(int Exp, int Size, out InMemory<T> Memory)
         {
             ref var Slab = ref GetSlabByExp(Exp);
             
@@ -253,7 +284,7 @@ namespace Inside.InAllocator
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Recycle<T>(in InsideMemory<T> Memory)
+        public void Recycle<T>(in InMemory<T> Memory)
         {
             Memory.Clear();
             
@@ -261,7 +292,7 @@ namespace Inside.InAllocator
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UnsafeRecycle<T>(in InsideMemory<T> Memory)
+        public void UnsafeRecycle<T>(in InMemory<T> Memory)
         {
             ref var Slab = ref GetSlabByExp(Memory.Exp);
             
